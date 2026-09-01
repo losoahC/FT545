@@ -1,3 +1,6 @@
 /FinTech 545 - Quantitative Risk Management.pdf
 venv
+.venv-mdpdf
+Assignments/Assignment1/.venv-mdpdf
+Assignments/Assignment1/.playwright-browsers
 .DS_Store
