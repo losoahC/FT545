@@ -1,113 +1,130 @@
 # Functional tests: Sections 1–7
 
-在仓库根目录执行（先激活你的 Python 环境）：
+Activate your Python environment, then run these commands from the repository root:
 
 ```bash
 python -m pip install -r FunctionalTest/testfiles/requirements-test.txt
 python -m pytest -c FunctionalTest/testfiles/pytest.ini -v
 ```
 
-也可以进入本目录后执行 `python -m pytest -v`。
+Alternatively, run `python -m pytest -v` from this directory.
 
-输入输出复核说明见 [INPUT_OUTPUT_CHECK.md](INPUT_OUTPUT_CHECK.md)。
+The four functions in `lib/corr_and_covar.py` accept two-dimensional numeric data:
+rows are observations, columns are variables, and `np.nan` represents missing
+values. Each function returns a NumPy matrix. The input is the complete `data`
+matrix so that row deletion can check all variables for missing values. Tests
+handle CSV loading.
 
-`lib/corr_and_covar.py` 的四个函数接收二维数值数据：行是观测，列是变量，
-缺失值用 `np.nan` 表示；返回 NumPy 矩阵。原来的 `(x, y)` 接口改为 `(data)`，
-以便整行删除能够检查所有变量的缺失值。CSV 读取由测试负责。
-
-| Tests.xlsx 编号 | 计算方式 | 输入 | 标准输出 |
+| Tests.xlsx case | Calculation | Input | Expected output |
 | --- | --- | --- | --- |
-| 1.1 | 整行删除缺失值，样本协方差 | data/test1.csv | data/testout_1.1.csv |
-| 1.2 | 整行删除缺失值，Pearson 相关系数 | data/test1.csv | data/testout_1.2.csv |
-| 1.3 | 成对删除缺失值，样本协方差 | data/test1.csv | data/testout_1.3.csv |
-| 1.4 | 成对删除缺失值，Pearson 相关系数 | data/test1.csv | data/testout_1.4.csv |
-| 2.1 | EW 协方差，λ=0.97 | data/test2.csv | data/testout_2.1.csv |
-| 2.2 | EW 相关系数，λ=0.94 | data/test2.csv | data/testout_2.2.csv |
-| 2.3 | EW 方差 λ=0.97，EW 相关系数 λ=0.94 | data/test2.csv | data/testout_2.3.csv |
-| 3.1 | near_psd 修正协方差 | data/testout_1.3.csv | data/testout_3.1.csv |
-| 3.2 | near_psd 修正相关系数 | data/testout_1.4.csv | data/testout_3.2.csv |
-| 3.3 | Higham 修正协方差 | data/testout_1.3.csv | data/testout_3.3.csv |
-| 3.4 | Higham 修正相关系数 | data/testout_1.4.csv | data/testout_3.4.csv |
-| 4.1 | PSD Cholesky 分解 | data/testout_3.1.csv | data/testout_4.1.csv |
-| 5.1 | 正定矩阵正态模拟 | data/test5_1.csv | data/testout_5.1.csv |
-| 5.2 | 半正定矩阵正态模拟 | data/test5_2.csv | data/testout_5.2.csv |
-| 5.3 | near_psd 修正后模拟 | data/test5_3.csv | data/testout_5.3.csv |
-| 5.4 | Higham 修正后模拟 | data/test5_3.csv | data/testout_5.4.csv |
-| 5.5 | PCA 模拟，保留 99% 方差 | data/test5_2.csv | data/testout_5.5.csv |
-| 6.1 | 算术收益率 | data/test6.csv | data/testout6_1.csv |
-| 6.2 | 对数收益率 | data/test6.csv | data/testout6_2.csv |
-| 7.1 | 正态分布拟合 | data/test7_1.csv | data/testout7_1.csv |
-| 7.2 | 广义 t 分布最大似然拟合 | data/test7_2.csv | data/testout7_2.csv |
-| 7.3 | t 分布误差回归 | data/test7_3.csv | data/testout7_3.csv |
-| 7.4 | t 分布拟合的 AICc | data/test7_2.csv | data/testout7_4.csv |
-| 7.5 | NIG 矩估计 | data/test7_5.csv | data/testout7_5.csv |
-| 7.6 | NIG 最大似然拟合 | data/test7_5.csv | data/testout7_6.csv |
+| 1.1 | Sample covariance with complete-case deletion | data/test1.csv | data/testout_1.1.csv |
+| 1.2 | Pearson correlation with complete-case deletion | data/test1.csv | data/testout_1.2.csv |
+| 1.3 | Sample covariance with pairwise deletion | data/test1.csv | data/testout_1.3.csv |
+| 1.4 | Pearson correlation with pairwise deletion | data/test1.csv | data/testout_1.4.csv |
+| 2.1 | EW covariance, lambda=0.97 | data/test2.csv | data/testout_2.1.csv |
+| 2.2 | EW correlation, lambda=0.94 | data/test2.csv | data/testout_2.2.csv |
+| 2.3 | EW variances with lambda=0.97 and EW correlation with lambda=0.94 | data/test2.csv | data/testout_2.3.csv |
+| 3.1 | Covariance repair using near_psd | data/testout_1.3.csv | data/testout_3.1.csv |
+| 3.2 | Correlation repair using near_psd | data/testout_1.4.csv | data/testout_3.2.csv |
+| 3.3 | Covariance repair using Higham's algorithm | data/testout_1.3.csv | data/testout_3.3.csv |
+| 3.4 | Correlation repair using Higham's algorithm | data/testout_1.4.csv | data/testout_3.4.csv |
+| 4.1 | PSD Cholesky factorization | data/testout_3.1.csv | data/testout_4.1.csv |
+| 5.1 | Normal simulation with positive definite covariance | data/test5_1.csv | data/testout_5.1.csv |
+| 5.2 | Normal simulation with positive semidefinite covariance | data/test5_2.csv | data/testout_5.2.csv |
+| 5.3 | Normal simulation after near_psd repair | data/test5_3.csv | data/testout_5.3.csv |
+| 5.4 | Normal simulation after Higham repair | data/test5_3.csv | data/testout_5.4.csv |
+| 5.5 | PCA simulation retaining 99% of variance | data/test5_2.csv | data/testout_5.5.csv |
+| 6.1 | Arithmetic returns | data/test6.csv | data/testout6_1.csv |
+| 6.2 | Log returns | data/test6.csv | data/testout6_2.csv |
+| 7.1 | Normal distribution fitting | data/test7_1.csv | data/testout7_1.csv |
+| 7.2 | Generalized Student t fitting by maximum likelihood | data/test7_2.csv | data/testout7_2.csv |
+| 7.3 | Regression with Student t errors | data/test7_3.csv | data/testout7_3.csv |
+| 7.4 | AICc for the fitted Student t distribution | data/test7_2.csv | data/testout7_4.csv |
+| 7.5 | NIG fitting by the method of moments | data/test7_5.csv | data/testout7_5.csv |
+| 7.6 | NIG fitting by maximum likelihood | data/test7_5.csv | data/testout7_6.csv |
 
-第 7 部分的函数位于 `lib/distribution_fitting.py`，对应测试为
-`tests/test_distribution_fitting.py`，需要 SciPy。拟合函数返回参数字典：
+Section 7 is implemented in `lib/distribution_fitting.py`, with tests in
+`tests/test_distribution_fitting.py`, and requires SciPy. Fitting functions
+return parameter dictionaries:
 
-| 编号 | 函数 | 返回值 |
+| Case | Function | Return values |
 | --- | --- | --- |
-| 7.1 | fit_normal(data) | mu, sigma（样本标准差） |
-| 7.2 | fit_general_t(data) | mu, sigma（尺度参数）, nu |
+| 7.1 | fit_normal(data) | mu, sigma (sample standard deviation) |
+| 7.2 | fit_general_t(data) | mu, sigma (scale parameter), nu |
 | 7.3 | fit_regression_t(x, y) | mu=0, sigma, nu, Alpha, B1, B2, ... |
-| 7.4 | aicc(log_likelihood, n, k) | AICc 数值 |
+| 7.4 | aicc(log_likelihood, n, k) | AICc scalar |
 | 7.5 | fit_nig_moments(data) | mu, alpha, beta, delta |
 | 7.6 | fit_nig_mle(data) | mu, alpha, beta, delta |
 
-7.3 的 x 是不含截距列的二维自变量矩阵，y 是一维因变量；函数同时拟合截距、
-回归系数和 t 误差分布。7.4 使用 7.2 的拟合参数计算总对数似然，再传入
-`aicc(log_likelihood, len(data), 3)`，其中 3 是估计参数的数量。
-7.5 使用样本方差和未经偏差修正的偏度、超额峰度，与标准输出约定一致；
-无法产生有限 NIG 参数的样本矩会抛出异常。
+For 7.3, `x` is a two-dimensional predictor matrix without an intercept column,
+and `y` is a one-dimensional response. The function jointly fits the intercept,
+regression coefficients, and Student t error parameters. For 7.4, compute the
+summed log likelihood using the parameters from 7.2, then call
+`aicc(log_likelihood, len(data), 3)`, where 3 is the number of estimated parameters.
+Case 7.5 uses sample variance and uncorrected skewness and excess kurtosis to
+match the reference convention. It raises an exception when the sample moments
+do not admit finite NIG parameters.
 
-7.6 将 SciPy 的 `(a, b, loc, scale)` 转为 `(mu, alpha, beta, delta)`，
-转换关系见 [SciPy NIG 文档](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.norminvgauss.html)。
-7.1、7.5 使用 `rtol=1e-10` 对比；数值优化会有末位差异，7.2、7.6 使用
-`rtol=1e-4`，7.3 使用 `rtol=1e-5`，7.4 使用 `rtol=1e-8`。
-测试还检查 NIG 的矩还原、似然改进及无效输入，不只是比较参数。
+Case 7.6 converts SciPy's `(a, b, loc, scale)` to `(mu, alpha, beta, delta)`;
+see the [SciPy NIG documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.norminvgauss.html).
+Cases 7.1 and 7.5 use `rtol=1e-10`. Numerical optimization can produce small
+parameter differences: cases 7.2 and 7.6 use `rtol=1e-4`, case 7.3 uses
+`rtol=1e-5`, and case 7.4 uses `rtol=1e-8`. Tests also check NIG moment recovery,
+likelihood improvement, and invalid inputs.
 
-第 4–6 部分按函数文件和测试文件对应组织：
+Sections 4–6 have corresponding implementation and test files:
 
-| 函数文件 | 主要函数 | 测试文件 |
+| Implementation | Main functions | Tests |
 | --- | --- | --- |
 | lib/chol_psd.py | chol_psd(matrix) | tests/test_chol_psd.py |
 | lib/simulations.py | simulate_normal / simulate_pca | tests/test_simulations.py |
 | lib/returns_conversion.py | return_calculate | tests/test_returns_conversion.py |
 
-`chol_psd` 返回下三角矩阵 L，使 `L @ L.T` 还原输入，支持奇异半正定矩阵。
-4.1 的末尾零主元可能存在浮点误差，因此标准答案对比使用 `atol=1e-8`，
-同时用 `atol=1e-12` 检查矩阵重建。
+`chol_psd` returns a lower triangular matrix L such that `L @ L.T` reconstructs
+the input, including singular positive semidefinite matrices. The final zero
+pivot in case 4.1 can be affected by floating-point rounding, so the reference
+comparison uses `atol=1e-8`, while reconstruction is checked with `atol=1e-12`.
 
-`simulate_normal(100000, covariance, fix_method=None, seed=545)` 返回零均值
-正态样本，每行一次模拟。5.3、5.4 分别传入 `near_psd`、`higham_nearest_psd`。
-`simulate_pca(covariance, 100000, explained=0.99, seed=545)` 保留累计方差达到
-99% 所需的最少主成分。Python 和 Julia 的随机数不同，第 5 部分不要求逐元素
-精确相等：测试按正态样本协方差的标准误差设置六倍误差范围，分别检查理论值、
-标准 CSV 和模拟结果；两份模拟结果比较时计入双方的抽样误差。
+`simulate_normal(100000, covariance, fix_method=None, seed=545)` returns normal
+samples with a population mean of zero, with one simulation per row. Pass
+`near_psd` or `higham_nearest_psd` for cases 5.3 and 5.4, respectively.
+`simulate_pca(covariance, 100000, explained=0.99, seed=545)` retains the fewest
+principal components needed to explain at least 99% of the variance. Python and
+Julia generate different random draws, so section 5 does not require exact
+elementwise equality. Tests use six standard errors of Gaussian sample
+covariance to compare simulations and reference CSVs against theoretical values.
+Comparisons between two simulated results account for sampling error in both.
 
-`return_calculate(prices, method="arithmetic", date_column="Date")` 接收 pandas
-DataFrame；`method="log"` 计算对数收益率。价格须为正且有限，按输入行序计算，
-输出保留列顺序及每个收益区间的结束日期。Excel 中第 6 部分的文件名与磁盘上
-略有不同，测试使用实际存在的 `testout6_1.csv` 和 `testout6_2.csv`。
-7.1–7.4 也有相同的命名差异，测试使用实际存在的 `testout7_1.csv` 至
-`testout7_4.csv`。所有标准数据均保留原样。
+`return_calculate(prices, method="arithmetic", date_column="Date")` accepts a
+pandas DataFrame. Use `method="log"` for log returns. Prices must be positive and
+finite. Calculations follow the input row order, and the output preserves column
+order and the ending date of each return period. Section 6 filenames in Excel
+differ slightly from the files on disk; tests use `testout6_1.csv` and
+`testout6_2.csv`. Cases 7.1–7.4 have the same naming discrepancy; tests use
+`testout7_1.csv` through `testout7_4.csv`. All reference data remains unchanged.
 
-`lib/fix_nonpsd_corr_covar.py` 实现 `near_psd(matrix)` 和
-`higham_nearest_psd(matrix)`，分别用于协方差矩阵和相关系数矩阵。
-输入必须是有限、对称、对角线为正的方阵。协方差先转换到相关系数尺度，
-修正后恢复原方差。Higham 在相关系数尺度上判断收敛，默认容差为 `1e-9`，
-最多迭代 1000 次；未收敛会抛出异常。结果可能存在容差范围内的微小负特征值。
+`lib/fix_nonpsd_corr_covar.py` implements `near_psd(matrix)` and
+`higham_nearest_psd(matrix)`. Both accept covariance or correlation matrices.
+Inputs must be finite, symmetric square matrices with positive diagonal entries.
+Covariance matrices are converted to correlation scale before repair, then the
+original variances are restored. Higham's convergence checks operate on the
+correlation scale, with a default tolerance of `1e-9` and at most 1000 iterations.
+Failure to converge raises an exception. Results may have tiny negative
+eigenvalues within the specified tolerance.
 
-`lib/expo_weighted_corr_and_covar.py` 实现 2.1–2.3：`ew_covariance`、
-`ew_correlation` 和 `ew_covariance_combined`。输入按时间从旧到新排列，
-最后一行权重最大。权重归一化后使用加权均值，不额外做 `n - 1` 修正。
-这些函数要求至少两行有限数值，不接受缺失值。2.3 的参数按 Excel 和标准
-输出实现；`test_setup.jl` 中 2.3 的文字注释把两个 λ 写反了。
+`lib/expo_weighted_corr_and_covar.py` implements cases 2.1–2.3 through
+`ew_covariance`, `ew_correlation`, and `ew_covariance_combined`. Observations must
+be ordered from oldest to newest; the last row receives the largest weight.
+Weights are normalized and used to compute weighted means, with no additional
+`n - 1` correction. These functions require at least two rows of finite numeric
+data and do not accept missing values. Case 2.3 follows Excel and the reference
+outputs; its comment in `test_setup.jl` reverses the two decay factors.
 
-第 1–3、6 部分逐元素比较标准输出（`rtol=1e-10, atol=1e-12`），并检查缺失值策略、
-观测不足、常数列和无共同观测等边界情况。样本协方差使用 `n - 1`；
-相关系数在每一对共同有效的观测上计算。少于两个有效观测返回 NaN；
-相关系数涉及常数列时也返回 NaN。
+Sections 1–3 and 6 compare reference outputs element by element using
+`rtol=1e-10, atol=1e-12`. Tests also cover missing-data policies, insufficient
+observations, constant columns, and pairs without shared observations. Sample
+covariance uses `n - 1`; correlation uses the same valid observations for each
+pair. Fewer than two valid observations produce NaN, and correlations involving
+a constant variable also produce NaN.
 
-Tests.xlsx 和标准答案 CSV 只用于对照，不会被测试修改。
+Tests.xlsx and the expected-output CSVs are read-only references for the tests.
