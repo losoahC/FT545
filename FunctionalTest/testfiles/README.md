@@ -1,4 +1,4 @@
-# Functional tests: Sections 1–7
+# Functional tests: Sections 1–9 (before 10.1)
 
 Activate your Python environment, then run these commands from the repository root:
 
@@ -128,3 +128,70 @@ pair. Fewer than two valid observations produce NaN, and correlations involving
 a constant variable also produce NaN.
 
 Tests.xlsx and the expected-output CSVs are read-only references for the tests.
+
+
+## Sections 8 and 9
+
+`lib/risk_measures.py` implements Normal, Student t, and empirical VaR/ES.
+`normal_risk(mu, sigma)` and `t_risk(mu, sigma, nu)` return four values:
+`VaR Absolute`, `VaR Diff from Mean`, `ES Absolute`, and `ES Diff from Mean`.
+Losses are reported with the opposite sign from returns; the default lower-tail
+probability is 0.05. Student t ES requires nu > 1. Empirical VaR uses NumPy's
+linear quantile; empirical ES averages exactly the worst alpha fraction of
+observations, using a fractional boundary observation when necessary.
+
+`simulate_t_risk` uses 10,000 draws by default. Cases 8.3 and 8.6 use seeds 8 and
+86, respectively. Analytical results are compared with relative tolerance 1e-4
+for optimizer differences. Simulated results use absolute tolerances of 0.008
+for VaR and 0.02 for ES against the independent Julia simulations. Tests also
+check analytical ES against numerical integration and simulation against theory.
+
+`lib/portfolio_risk.py` implements case 9.1. `portfolio_risk(returns, portfolio)`
+fits the specified Normal or T marginal for each stock, uses the direct
+Spearman correlation convention in `test_setup.jl` for the Gaussian copula,
+and simulates 100,000 scenarios. The portfolio input requires `Stock`, `Holding`,
+`Starting Price`, and `Distribution` columns and positive current position
+values. The report contains each stock and a Total row, with `VaR95`, `ES95`,
+`VaR95_Pct`, and `ES95_Pct`. Total risk is calculated from scenario-level summed
+P&L, not by adding individual risk measures. Tests allow 4% relative simulation
+error and verify position scaling and percentage calculations.
+
+| Case | Calculation | Input | Expected output |
+| --- | --- | --- | --- |
+| 8.1 | Normal VaR | data/test7_1.csv | data/testout8_1.csv |
+| 8.2 | Student t VaR | data/test7_2.csv | data/testout8_2.csv |
+| 8.3 | Simulated Student t VaR | data/test7_2.csv | data/testout8_3.csv |
+| 8.4 | Normal ES | data/test7_1.csv | data/testout8_4.csv |
+| 8.5 | Student t ES | data/test7_2.csv | data/testout8_5.csv |
+| 8.6 | Simulated Student t ES | data/test7_2.csv | data/testout8_6.csv |
+| 9.1 | Gaussian copula portfolio risk | data/test9_1_returns.csv and data/test9_1_portfolio.csv | data/testout9_1.csv |
+
+The corresponding tests are `tests/test_risk_measures.py` and
+`tests/test_portfolio_risk.py`.
+
+## Export actual test results
+
+Run from the repository root:
+
+```bash
+python FunctionalTest/testfiles/export_outputs.py
+```
+
+This writes 32 actual-result CSV files for cases 1.1 through 9.1 to the repository's
+`output/` directory. It does not implement or export case 10.1. Filenames and
+columns match the reference files on disk. The script calculates results from
+input data, chains computed matrices for sections 3 and 4, and never copies
+expected-output files. Existing generated files with matching names are replaced;
+reference files in `data/` are not modified.
+
+To choose another destination:
+
+```bash
+python FunctionalTest/testfiles/export_outputs.py --output-dir /path/to/results
+```
+
+`tests/test_export_outputs.py` exports to a temporary directory and checks all
+32 files for schema, serialization, and reference agreement. Random results
+are reproducible in the same environment but need not be identical to Julia
+results. The final Cholesky pivot in a chained calculation can differ by tiny
+rounding errors; the export comparison allows an absolute tolerance of 1e-7.
