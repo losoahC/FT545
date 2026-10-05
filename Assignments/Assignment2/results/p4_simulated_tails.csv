@@ -1,0 +1,7 @@
+,Model,Pair,Lower,Upper
+0,Gaussian,X1-X2,6.390000000000001,6.38
+1,Gaussian,X1-X3,4.61,4.68
+2,Gaussian,X2-X3,4.55,4.49
+3,t,X1-X2,9.46,9.44
+4,t,X1-X3,8.11,8.2
+5,t,X2-X3,7.82,8.0

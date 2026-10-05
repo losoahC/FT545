@@ -1,0 +1,51 @@
+{
+  "simulation_draws": 100000,
+  "seed": 545,
+  "problem1": {
+    "complete_days": 81,
+    "estimator_gap": 0.4239347364017925,
+    "repair_gap": 0.004578781732543313
+  },
+  "problem2": {
+    "raw_mean": 0.00016187615348274152,
+    "t": {
+      "mu": 0.00018163890710769454,
+      "sigma": 0.010289989832938417,
+      "nu": 8.269917622647348
+    },
+    "recent_days": 40,
+    "normal_mixture_excess": 2.5722745436757855
+  },
+  "problem3": {
+    "A_defaults": 406,
+    "B_defaults": 393,
+    "union_defaults": 782,
+    "both_defaults": 17
+  },
+  "problem4": {
+    "selected_margins": [
+      "Normal",
+      "t",
+      "t"
+    ],
+    "nu": 3.6599321272334238,
+    "R_min_eigen": 0.4127922653966982,
+    "ll_difference": 101.5591280916787,
+    "central_days": 793,
+    "central_difference": 50.47795347623678,
+    "rank_central_days": 784,
+    "rank_central_difference": 49.80034338353943,
+    "tail_pair": "X1-X2",
+    "tail_rho": 0.5832628140317476,
+    "tail_dependence": 0.3219423251533799
+  },
+  "problem5": {
+    "residual_correlation": 0.6983069893066779,
+    "market_std": 0.010552716980844656,
+    "decomposition_error": 1.0842021724855044e-19,
+    "market_residual_cross_cov": [
+      -5.453602110097427e-20,
+      -2.1401585969904243e-20
+    ]
+  }
+}

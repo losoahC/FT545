@@ -1,0 +1,5 @@
+,Method,Min eigenvalue,Distance from pairwise,Tracking variance,Cholesky
+0,Complete case,0.0015057870958388152,0.4239347364017925,1.0975452996002154e-06,success
+1,Pairwise,-0.0110718474335412,0.0,-1.7993696550690406e-06,fails: matrix is not positive definite
+2,Rebonato-Jackel,-7.51535498647354e-17,0.016182100106775153,6.807297706741682e-07,fails: matrix is not positive definite
+3,Higham,-8.604427878901333e-13,0.015520003131087666,6.787649474875454e-07,fails: matrix is not positive definite

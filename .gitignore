@@ -4,3 +4,7 @@ venv
 Assignments/Assignment1/.venv-mdpdf
 Assignments/Assignment1/.playwright-browsers
 .DS_Store
+Assignments/Assignment2/.mpl-cache/
+Assignments/Assignment2/.venv-mdpdf/
+Assignments/Assignment2/Codes/__pycache__/
+/tmp/pdfs/
