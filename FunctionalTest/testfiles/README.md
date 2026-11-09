@@ -1,4 +1,4 @@
-# Functional tests: Sections 1–9 (before 10.1)
+# Functional tests: Sections 1–13
 
 Activate your Python environment, then run these commands from the repository root:
 
@@ -177,8 +177,8 @@ Run from the repository root:
 python FunctionalTest/testfiles/export_outputs.py
 ```
 
-This writes 32 actual-result CSV files for cases 1.1 through 9.1 to the repository's
-`output/` directory. It does not implement or export case 10.1. Filenames and
+This writes 50 actual-result CSV files for cases 1.1 through 13.9 to the repository's
+`output/` directory. Filenames and
 columns match the reference files on disk. The script calculates results from
 input data, chains computed matrices for sections 3 and 4, and never copies
 expected-output files. Existing generated files with matching names are replaced;
@@ -191,7 +191,82 @@ python FunctionalTest/testfiles/export_outputs.py --output-dir /path/to/results
 ```
 
 `tests/test_export_outputs.py` exports to a temporary directory and checks all
-32 files for schema, serialization, and reference agreement. Random results
+50 files for schema, serialization, and reference agreement. Random results
 are reproducible in the same environment but need not be identical to Julia
 results. The final Cholesky pivot in a chained calculation can differ by tiny
 rounding errors; the export comparison allows an absolute tolerance of 1e-7.
+
+## Sections 10–13
+
+The remaining cases follow the same `lib/` implementation, `tests/` reference
+comparison, and actual-result CSV export pattern as sections 1–9.
+
+| Cases | Calculation | Implementation | Tests |
+| --- | --- | --- | --- |
+| 10.1–10.2 | Equal and custom risk-budget portfolios | lib/portfolio_optimization.py | tests/test_portfolio_optimization.py |
+| 10.3–10.4 | Long-only maximum Sharpe portfolios with optional bounds | lib/portfolio_optimization.py | tests/test_portfolio_optimization.py |
+| 11.1–11.2 | Buy-and-hold asset and factor attribution | lib/return_attribution.py | tests/test_return_attribution.py |
+| 12.1 | European GBSM value and Greeks | lib/option_pricing.py | tests/test_option_pricing.py |
+| 12.2 | American value and Greeks with continuous dividends | lib/option_pricing.py | tests/test_option_pricing.py |
+| 12.3 | American value with discrete cash dividends | lib/option_pricing.py | tests/test_option_pricing.py |
+| 13.1–13.4 | Kendall correlation and rank-based multivariate t fit | lib/multivariate_t.py | tests/test_multivariate_t.py |
+| 13.5–13.8 | Gaussian/t copula likelihood, selection, tail dependence | lib/multivariate_t.py | tests/test_multivariate_t.py |
+| 13.9 | t-copula portfolio VaR and ES | lib/multivariate_t.py | tests/test_multivariate_t.py |
+
+`risk_parity(covariance, risk_budget=None)` returns fully invested positive
+weights, with component variance contributions proportional to the budget.
+`max_sharpe(covariance, means, risk_free_rate, bounds=None)` returns fully
+invested long-only weights. Bounds are an asset-by-two array of lower and upper
+limits, defaulting to `[0, 1]`. The reference for 10.3–10.4 uses the indefinite
+matrix from 5.3 directly: its entries are nonnegative and diagonal positive,
+so long-only portfolios still have positive variance. The implementation follows
+that convention without repairing this matrix. Other indefinite matrices are
+rejected. Weight comparisons use `rtol=1e-5, atol=5e-7` to accommodate optimizer
+differences and Julia's tiny negative boundary weights. Tests also verify risk
+budget shares, investment constraints, and feasible objective perturbations.
+
+`expost_factor(weights, returns, factor_returns, betas, include_alpha=True)`
+returns the three-row attribution report. Betas have one row per stock and one
+column per factor. Weights drift with asset performance; Carino linking makes
+return contributions sum to the compounded portfolio return. Volatility
+contributions sum to sample portfolio volatility. Case 11.1 uses identity betas
+and omits Alpha. Zero period and total returns use the continuous limit of
+`log(1+r)/r`. Both reference reports use `rtol=1e-10, atol=1e-12`.
+
+`gbsm(call, underlying, strike, ttm, rf, carry, volatility)` returns a dictionary
+with Value, Delta, Gamma, Vega, Rho, and Theta. Maturity is in years; Vega and Rho
+are per unit change, and Theta is per year. European Rho varies the rate and
+carry together, keeping the dividend yield fixed. European Theta is `-dV/dT`.
+`american(...)` uses a CRR tree, with 500 steps by default and exercise at every
+node. `american_greeks(...)` matches the reference's central finite differences,
+with a spot displacement of 1.5 for Gamma. For this American report, Rho holds
+carry fixed and Theta is **+dV/dT**, as specified in `test_setup.jl`. These
+conventions explain the different signs from the European report. American
+Greek comparisons use `rtol=2e-5, atol=1e-5` for numerical differentiation;
+European and cash-dividend values use `rtol=1e-10, atol=1e-12`.
+
+For cash dividends, supply `dividend_times` as increasing integer tree indices
+and `dividend_amounts` as cash amounts. Case 12.3 uses two steps per calendar day.
+The tree compares exercise immediately before each dividend with continuation
+after subtracting the cash amount; subsequent trees restart from the adjusted
+spot. Tests also check put-call parity, analytical Greeks against finite
+differences, early exercise, zero dividends, and invalid schedules.
+
+Section 13 computes `rho = sin(pi*tau/2)` from Kendall's tau, repairs the
+correlation if needed, and adds a small ridge for positive definiteness. The
+multivariate t fit holds sample means and sample standard deviations fixed;
+it is the reference's rank-based profile fit. Its scale is
+`S = outer(sd, sd) * R * (nu-2)/nu`, so covariance is `nu/(nu-2)*S`.
+Degrees of freedom use two 200-point searches over `theta=1/nu`, first over
+`[0.01, 0.49]`, then between the coarse winner's neighbors. This reproduces the
+reference grid exactly.
+
+Both copulas use the same individually fitted generalized t margins and Kendall
+correlation. The Gaussian has zero additional fitted parameters and the t copula
+has one (nu), matching the reference AICc/BIC convention. Likelihood and selection
+comparisons use `rtol=1e-6` for marginal optimizer differences. Other deterministic
+section 13 cases use `rtol=1e-10, atol=1e-12`. Simulated t-copula scenarios share
+one chi-square shock across assets in each row. Case 13.9 uses 100,000 scenarios,
+seed 13, and a 4% reference tolerance for independent Julia/Python sampling.
+Tests check uniform simulated margins, joint tails, scale/covariance conversion,
+portfolio position scaling, and the sums of scenario-level P&L.

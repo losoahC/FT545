@@ -1,4 +1,4 @@
-"""Calculate all cases before 10.1 and export their actual results as CSV files."""
+"""Calculate all functional cases (sections 1–13) and export actual CSV results."""
 
 import argparse
 from pathlib import Path
@@ -21,6 +21,13 @@ from lib.distribution_fitting import (
 )
 from lib.risk_measures import normal_risk, t_risk, simulate_t_risk
 from lib.portfolio_risk import portfolio_risk
+from lib.portfolio_optimization import risk_parity, max_sharpe
+from lib.return_attribution import expost_factor
+from lib.option_pricing import gbsm, american, american_greeks
+from lib.multivariate_t import (
+    kendall_correlation, fit_multivariate_t, fit_t_margins, fit_gaussian_copula,
+    fit_t_copula, copula_criteria, tail_dependence_t, t_copula_portfolio_risk,
+)
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 DEFAULT_OUTPUT = Path(__file__).resolve().parents[2] / "output"
@@ -86,6 +93,56 @@ def calculate_outputs():
     ]:
         parameters(f"testout8_{i}.csv", {key: value for key, value in result.items() if key.startswith(measure)})
     outputs["testout9_1.csv"] = portfolio_risk(read("test9_1_returns.csv"), read("test9_1_portfolio.csv"), seed=9)
+    cov = read("test5_2.csv").to_numpy()
+    for i, budget in [(1, None), (2, [1, 1, 1, 1, .5])]:
+        outputs[f"testout10_{i}.csv"] = pd.DataFrame({"W": risk_parity(cov, budget)})
+    cov = read("test5_3.csv").to_numpy()
+    means = read("test10_3_means.csv").Mean.to_numpy()
+    for i, bounds in [(3, None), (4, np.tile([.1, .5], (5, 1)))]:
+        outputs[f"testout10_{i}.csv"] = pd.DataFrame({"W": max_sharpe(cov, means, .04, bounds)})
+    returns = read("test11_1_returns.csv")
+    outputs["testout11_1.csv"] = expost_factor(read("test11_1_weights.csv").W, returns,
+                                             returns, np.eye(3), include_alpha=False)
+    outputs["testout11_2.csv"] = expost_factor(
+        read("test11_2_weights.csv").W, read("test11_2_stock_returns.csv"),
+        read("test11_2_factor_returns.csv"), read("test11_2_beta.csv").iloc[:, 1:])
+    for i, function in [(1, gbsm), (2, american_greeks)]:
+        rows = []
+        for _, o in read("test12_1.csv").dropna(subset=["ID"]).iterrows():
+            result = function(o["Option Type"] == "Call", o.Underlying, o.Strike,
+                              o.DaysToMaturity/o.DayPerYear, o.RiskFreeRate,
+                              o.RiskFreeRate-o.DividendRate, o.ImpliedVol)
+            rows.append({"ID": int(o.ID), **result})
+        outputs[f"testout12_{i}.csv"] = pd.DataFrame(rows)
+    rows = []
+    for _, o in read("test12_3.csv").dropna(subset=["ID"]).iterrows():
+        value = american(o["Option Type"] == "Call", o.Underlying, o.Strike,
+                         o.DaysToMaturity/o.DayPerYear, o.RiskFreeRate, o.RiskFreeRate,
+                         o.ImpliedVol, steps=int(2*o.DaysToMaturity),
+                         dividend_times=[2*int(d) for d in o.DividendDates.split(",")],
+                         dividend_amounts=[float(d) for d in o.DividendAmts.split(",")])
+        rows.append({"ID": int(o.ID), "Value": value})
+    outputs["testout12_3.csv"] = pd.DataFrame(rows)
+    returns = read("test13_returns.csv")
+    matrix("testout13_1.csv", kendall_correlation(returns))
+    mu, scale, nu, ll = fit_multivariate_t(returns)
+    outputs["testout13_2.csv"] = pd.DataFrame({"mu": mu})
+    matrix("testout13_3.csv", scale)
+    parameters("testout13_4.csv", {"nu": nu, "ll": ll})
+    models, uniforms = fit_t_margins(returns)
+    _, ll_g = fit_gaussian_copula(uniforms)
+    correlation, nu, ll_t = fit_t_copula(uniforms)
+    parameters("testout13_5.csv", {"ll": ll_g})
+    parameters("testout13_6.csv", {"nu": nu, "ll": ll_t})
+    outputs["testout13_7.csv"] = pd.DataFrame([
+        {"Copula": name, "LL": ll, "K": k, **copula_criteria(ll, k, len(returns))}
+        for name, ll, k in [("Gaussian", ll_g, 0), ("T", ll_t, 1)]])
+    outputs["testout13_8.csv"] = pd.DataFrame([
+        {"I": i+1, "J": j+1, "Rho": correlation[i, j],
+         "Lambda": tail_dependence_t(correlation[i, j], nu)}
+        for i in range(len(correlation)) for j in range(i+1, len(correlation))])
+    outputs["testout13_9.csv"] = t_copula_portfolio_risk(
+        returns, read("test13_portfolio.csv"), fitted=(models, correlation, nu), seed=13)
     return outputs
 
 

@@ -1,5 +1,5 @@
-........................................................................ [ 31%]
-........................................................................ [ 62%]
-........................................................................ [ 93%]
-..............                                                           [100%]
-230 passed in 2.86s
+Command: PYTHONDONTWRITEBYTECODE=1 venv/bin/python -m pytest -c FunctionalTest/testfiles/pytest.ini -q
+
+304 passed in 13.86s
+
+All 50 reference cases (sections 1–13) are covered, including CSV export comparisons.

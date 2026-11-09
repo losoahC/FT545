@@ -10,7 +10,7 @@ DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 FILENAMES = (
     [f"testout_{section}.{i}.csv" for section, count in [(1, 4), (2, 3), (3, 4), (4, 1), (5, 5)]
      for i in range(1, count + 1)]
-    + [f"testout{section}_{i}.csv" for section, count in [(6, 2), (7, 6), (8, 6), (9, 1)]
+    + [f"testout{section}_{i}.csv" for section, count in [(6, 2), (7, 6), (8, 6), (9, 1), (10, 4), (11, 2), (12, 3), (13, 9)]
        for i in range(1, count + 1)]
 )
 
@@ -51,5 +51,13 @@ def test_exported_csv_matches_calculation_and_reference(exported, filename):
     elif filename == "testout8_6.csv":
         atol = 0.02
     elif filename == "testout9_1.csv":
+        rtol = 0.04
+    elif filename.startswith("testout10_"):
+        rtol, atol = 1e-5, 5e-7
+    elif filename == "testout12_2.csv":
+        rtol, atol = 2e-5, 1e-5
+    elif filename in ("testout13_5.csv", "testout13_6.csv", "testout13_7.csv"):
+        rtol = 1e-6
+    elif filename == "testout13_9.csv":
         rtol = 0.04
     np.testing.assert_allclose(actual[numeric], expected[numeric], rtol=rtol, atol=atol)
