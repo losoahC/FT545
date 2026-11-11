@@ -1,0 +1,10 @@
+{
+  "scenarios": 1000000,
+  "seeds": [
+    54503,
+    54504
+  ],
+  "python": "3.12.4 | packaged by Anaconda, Inc. | (main, Jun 18 2024, 10:07:17) [Clang 14.0.6 ]",
+  "numpy": "2.5.2",
+  "pandas": "3.0.5"
+}

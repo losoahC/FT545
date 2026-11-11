@@ -8,6 +8,8 @@ Haolun Wu
   and reproduction instructions.
 - `Assignments/Assignment2`: Assignment 2 PDF responses, reusable-library-based
   code, data, figures, calculated tables, and reproduction instructions.
+- `Assignments/Assignment3`: Assignment 3 PDF responses, option pricing and risk,
+  portfolio construction, factor analysis, and fully reproducible calculations.
 
 To reproduce Assignment 1 results from the repository root:
 
